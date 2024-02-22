@@ -1,0 +1,8 @@
+# vscode file
+.vscode/
+
+# compiled python bytecode
+*.py[cod]
+
+# mac file
+.DS_Store
