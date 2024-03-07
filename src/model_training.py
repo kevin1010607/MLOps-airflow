@@ -10,6 +10,8 @@ import os
 import json
 from typing import Tuple, List, Dict, Any
 
+import mlflow
+
 
 ##########################################################################################
 ######################################## train ###########################################
@@ -141,6 +143,16 @@ def save(**kwargs) -> None:
         with open(os.path.join(path, "result.json"), 'w') as f:
             json.dump(result, f)
         model.save_model(os.path.join(path, model_name))
+
+        # mlflow
+        mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
+        mlflow.set_experiment("Test")
+        with mlflow.start_run():
+            # signature = mlflow.models.infer_signature(features, target)
+            mlflow.log_metric("score", score)
+            mlflow.set_tag("classifications", "simple CatBoostRegressor")
+            mlflow.catboost.log_model(cb_model = model, artifact_path="test_model", registered_model_name="test_model")
+    
     except Exception as e:
         return e
 
