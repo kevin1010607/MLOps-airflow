@@ -47,3 +47,7 @@ airflow scheduler
 1. Open 127.0.0.1:8080
 2. Trigger DAG
 3. Logs can be found in the `$AIRFLOW_HOME/logs`
+
+### API
+# Modify airflow config
+# auth_backends = airflow.api.auth.backend.session,airflow.api.auth.backend.basic_auth
