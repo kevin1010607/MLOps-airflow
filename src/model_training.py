@@ -44,9 +44,15 @@ def data_preprocessing(**kwargs) -> Tuple[pd.DataFrame, pd.DataFrame]:
         target: target dataframe
         features: feature dataframe
     '''
-    data = kwargs['data']
-    target = kwargs['target']
-    features = kwargs['features']
+    # get dag params
+    dag_params = kwargs['dag_run'].conf
+    target = dag_params['target_name']
+    features_range = dag_params['feature_range']
+    data_name = dag_params['data_name']
+    data = os.path.join(os.path.dirname(__file__), 'input', 'train', data_name+'.csv')
+    data = pd.read_csv(data, dtype=np.float64)
+    lower_bound, upper_bound = map(int, features_range.split(','))
+    features = [f'col{i}' for i in range(lower_bound, upper_bound)]
 
     try:
         data = _DC(data)
@@ -127,10 +133,13 @@ def save(**kwargs) -> None:
     Returns
     '''
     model, score = kwargs['task_instance'].xcom_pull(task_ids='train')
+    dag_params = kwargs['dag_run'].conf  
     path = kwargs['path']
-    model_name = kwargs['model_name']
-    target = kwargs['target']
-    features = kwargs['features']
+    model_name = dag_params['model_name']
+    target = dag_params['target_name']
+    features_range = dag_params['feature_range']
+    lower_bound, upper_bound = map(int, features_range.split(','))
+    features = [f'col{i}' for i in range(lower_bound, upper_bound)]
 
     try:
         result = {
@@ -165,26 +174,24 @@ default_args = {
 }
 schedule = None
 description = 'model training'
+default_params = {
+    'target_name': 'target',
+    'data_name': 'data',
+    'feature_range': '1,30',
+    'model_name': 'model.pkl'
+}
 
 with DAG(
     dag_id, 
     default_args=default_args, 
     schedule=schedule, 
     description=description, 
+    params=default_params
 ) as dag:
     # Task 1: data preprocessing
-    data = os.path.join(os.path.dirname(__file__), 'input', 'train', 'data.csv')
-    data = pd.read_csv(data, dtype=np.float64)
-    target_name = 'target'
-    features_name = [f'col{i}' for i in range(1, 30)]
     task1 = PythonOperator(
         task_id='data_preprocessing', 
         python_callable=data_preprocessing, 
-        op_kwargs={
-            'data': data, 
-            'target': target_name, 
-            'features': features_name
-        }, 
         provide_context=True, 
         dag=dag, 
     )
@@ -207,15 +214,11 @@ with DAG(
 
     # Task 4: save
     path = os.path.join(os.path.dirname(__file__), 'output', 'train')
-    model_name = 'model.pkl'
     task4 = PythonOperator(
         task_id='save', 
         python_callable=save, 
         op_kwargs={
             'path': path, 
-            'model_name': model_name, 
-            'target': target_name, 
-            'features': features_name
         }, 
         provide_context=True, 
         dag=dag, 
