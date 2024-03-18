@@ -49,5 +49,7 @@ airflow scheduler
 3. Logs can be found in the `$AIRFLOW_HOME/logs`
 
 ### API
+```bash
 # Modify airflow config
-# auth_backends = airflow.api.auth.backend.session,airflow.api.auth.backend.basic_auth
+auth_backends = airflow.api.auth.backend.session,airflow.api.auth.backend.basic_auth
+```
