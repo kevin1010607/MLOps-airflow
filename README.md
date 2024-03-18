@@ -41,7 +41,7 @@ python -m mlflow server --host 127.0.0.1 --port 8080
 
 ```bash
 # Run webserver
-airflow webserver -p 8080
+airflow webserver -p 8081
 
 # Create another terminal and run scheduler
 airflow scheduler
@@ -49,6 +49,6 @@ airflow scheduler
 
 ### Run dags and view the logs
 
-1. Open 127.0.0.1:8080
+1. Open 127.0.0.1:8081
 2. Trigger DAG
 3. Logs can be found in the `$AIRFLOW_HOME/logs`
