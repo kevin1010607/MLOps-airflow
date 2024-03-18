@@ -31,6 +31,11 @@ vim airflow.cfg
 # Line 66: load_examples = False
 # Line 113: enable_xcom_pickling = True
 ```
+### Run MLflow
+```bash
+# pip install mlflow
+python -m mlflow server --host 127.0.0.1 --port 8080
+```
 
 ### Run airflow
 
