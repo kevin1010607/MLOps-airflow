@@ -10,6 +10,7 @@ import os
 import json
 from typing import Tuple, List, Dict, Any
 
+import mlflow
 
 ##########################################################################################
 ######################################## update ##########################################
@@ -108,10 +109,20 @@ def update(**kwargs) -> Tuple[CatBoostRegressor, float]:
     model_path = kwargs['model_path']
 
     try:
-        estimator = CatBoostRegressor()
-        model = estimator.load_model(model_path)
+        # mlflow
+        mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
+        mlflow.set_experiment("Test")
+        client = mlflow.MlflowClient()
+        latest_version = client.search_model_versions("name='test_model'")[0].version
+        model_uri = f"models:/test_model/{latest_version}"
+        model = mlflow.catboost.load_model(model_uri)
         model = model.fit(training_data["feature"], training_data["target"], init_model=model)
         score = model.score(testing_data["feature"], testing_data["target"])
+
+        # estimator = CatBoostRegressor()
+        # model = estimator.load_model(model_path)
+        # model = model.fit(training_data["feature"], training_data["target"], init_model=model)
+        # score = model.score(testing_data["feature"], testing_data["target"])
         return model, score
     except Exception as e:
         return e
@@ -143,7 +154,17 @@ def save(**kwargs) -> None:
             os.mkdir(path)
         with open(os.path.join(path, "result.json"), 'w') as f:
             json.dump(result, f)
-        model.save_model(os.path.join(path, model_name))
+        # model.save_model(os.path.join(path, model_name))
+
+        # mlflow
+        mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
+        mlflow.set_experiment("Test")
+        with mlflow.start_run():
+            # signature = mlflow.models.infer_signature(features, target)
+            mlflow.log_metric("score", score)
+            mlflow.set_tag("classifications", "simple CatBoostRegressor")
+            mlflow.catboost.log_model(cb_model = model, artifact_path="test_model", registered_model_name="test_model")
+
     except Exception as e:
         return e
 

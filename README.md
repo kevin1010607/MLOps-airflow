@@ -31,12 +31,17 @@ vim airflow.cfg
 # Line 66: load_examples = False
 # Line 113: enable_xcom_pickling = True
 ```
+### Run MLflow
+```bash
+# pip install mlflow
+python -m mlflow server --host 127.0.0.1 --port 8080
+```
 
 ### Run airflow
 
 ```bash
 # Run webserver
-airflow webserver -p 8080
+airflow webserver -p 8081
 
 # Create another terminal and run scheduler
 airflow scheduler
@@ -44,12 +49,15 @@ airflow scheduler
 
 ### Run dags and view the logs
 
-1. Open 127.0.0.1:8080
+1. Open 127.0.0.1:8081
 2. Trigger DAG
 3. Logs can be found in the `$AIRFLOW_HOME/logs`
+<<<<<<< HEAD
 
 ### API
 ```bash
 # Modify airflow config
 auth_backends = airflow.api.auth.backend.session,airflow.api.auth.backend.basic_auth
 ```
+=======
+>>>>>>> 1fb58b5ebf2becb90330e6b02015b92435d1ec37

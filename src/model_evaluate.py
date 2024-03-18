@@ -11,6 +11,8 @@ from sklearn import metrics
 import scipy.stats as st
 from typing import Tuple, List, Dict, Any
 
+import mlflow
+
 
 ##########################################################################################
 ####################################### evaluate #########################################
@@ -58,9 +60,18 @@ def predict(**kwargs) -> pd.DataFrame:
     model_path = kwargs['model_path']
 
     try:
-        estimator = CatBoostRegressor()
-        model = estimator.load_model(model_path)
-        predictions = model.predict(data)
+        # mlflow
+        mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
+        mlflow.set_experiment("Test")
+        client = mlflow.MlflowClient()
+        latest_version = client.search_model_versions("name='test_model'")[0].version
+        model_uri = f"models:/test_model/{latest_version}"
+        loaded_model = mlflow.catboost.load_model(model_uri)
+        predictions = loaded_model.predict(data)
+
+        # estimator = CatBoostRegressor()
+        # model = estimator.load_model(model_path)
+        # predictions = model.predict(data)
         return pd.DataFrame(predictions)
     except Exception as e:
         return e
@@ -106,6 +117,14 @@ def evaluate(**kwargs) -> Dict:
             "neg_max_err": neg_max_err,
             "interval": interval
         }
+
+        # mlflow
+        mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
+        mlflow.set_experiment("Test")
+        client = mlflow.MlflowClient()
+        latest_model_run_id = client.search_model_versions("name='test_model'")[0].run_id 
+        for key in res:
+            client.log_metric(latest_model_run_id, key, res[key])
 
         return res
     except Exception as e:
